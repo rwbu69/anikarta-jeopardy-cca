@@ -1,0 +1,34 @@
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# IDE & Editor Configurations
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary & Log Files
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Heavy Media & Background Images
+background*.png
+background*.jpg
+background*.jpeg
+background*.webp
+*.psd
+
+# Media Content (tracks directory via .gitkeep)
+audio/*
+!audio/.gitkeep
+video/*
+!video/.gitkeep
