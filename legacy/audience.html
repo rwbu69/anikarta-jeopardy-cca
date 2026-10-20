@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Penonton - CCA ANIKARTA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/modals.css">
+    <link rel="stylesheet" href="css/audience.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+    <header class="top-navbar">
+        <div class="nav-title">
+            <img id="eventLogo" src="" alt="Event Logo" class="nav-logo hidden">
+            <span id="eventTitleText" class="nav-title-text font-display">Kuis Penonton</span>
+            <span id="progressBadge" class="progress-badge">Kuis Penonton: 0 / 20</span>
+        </div>
+        <div class="nav-actions flex-row" style="gap: 10px;">
+            <button id="btnResetProgress" class="btn btn-danger" title="Mulai ulang semua kartu kuis penonton">Reset Papan</button>
+            <a href="index.html" class="btn btn-outline">Jeopardy Game</a>
+            <a href="admin.html" class="btn btn-outline">Admin</a>
+        </div>
+    </header>
+
+    <main class="audience-container">
+        <div class="audience-grid" id="audienceGrid">
+            <!-- 20 cards injected dynamically -->
+        </div>
+    </main>
+
+    <!-- Modal Kuis Penonton -->
+    <div id="audienceModal" class="modal-overlay hidden">
+        <div class="modal-content audience-modal-content">
+            <button type="button" class="modal-close-btn" id="btnAudCloseX" aria-label="Tutup kuis" title="Tutup (Batal pilihan / Salah klik)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <div class="audience-modal-header">
+                <div class="dialogue-name-plate" id="audModalNumberPlate">Nomor 1</div>
+            </div>
+
+            <!-- Media Player UI -->
+            <div id="audMediaPlayerContainer" class="media-player-container mb-lg">
+                <video id="audVideoPlayer" class="video-player-ui hidden"></video>
+                <audio id="audAudioPlayer" class="audio-player-ui"></audio>
+                
+                <div class="custom-player-controls">
+                    <button id="btnAudPlayPause" class="btn btn-primary" title="Putar / Jeda (Spasi)" aria-label="Putar atau Jeda" style="padding: 8px 18px; min-width: 50px;">
+                        <svg class="media-icon-play" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                            <polygon points="6 4 20 12 6 20 6 4"/>
+                        </svg>
+                        <svg class="media-icon-pause hidden" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                            <rect x="6" y="4" width="4" height="16" rx="1"/>
+                            <rect x="14" y="4" width="4" height="16" rx="1"/>
+                        </svg>
+                    </button>
+                    <div class="progress-container flex-1">
+                        <input type="range" id="audMediaProgress" min="0" max="100" value="0" step="0.1">
+                        <div class="flex-row justify-between text-sub" style="font-size: 0.8rem; margin-top: 5px;">
+                            <span id="audTimeCurrent">0:00</span>
+                            <span id="audTimeTotal">0:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reveal Stage Controls -->
+            <div id="audStageControls" class="audience-stage-controls">
+                <button id="btnAudReveal" class="btn btn-primary" style="font-size: 1.3rem; padding: 14px 40px;">Buka Jawaban</button>
+            </div>
+
+            <!-- Revealed Answer Section (NO POINTS) -->
+            <div id="audRevealSection" class="audience-reveal-box hidden">
+                <div class="text-sub fw-bold uppercase ls-2 mb-sm" style="font-size: 0.85rem;">Jawaban:</div>
+                <div class="reveal-title" id="audRevealTitle"></div>
+                <div class="reveal-artist" id="audRevealArtist"></div>
+                
+                <div class="flex-row justify-center mt-lg" style="gap: 15px;">
+                    <button id="btnAudFinish" class="btn btn-primary" style="font-size: 1.1rem; padding: 12px 36px;">Selesai</button>
+                    <button id="btnAudCloseRevealed" class="btn btn-outline" style="font-size: 1.1rem; padding: 12px 24px;">Tutup</button>
+                </div>
+            </div>
+
+            <!-- Close button during unrevealed state -->
+            <div id="audModalFooter" class="flex-row justify-center mt-lg border-t-divider pt-md">
+                <button id="btnAudCancel" class="btn btn-outline">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/audience/main.js"></script>
+</body>
+</html>

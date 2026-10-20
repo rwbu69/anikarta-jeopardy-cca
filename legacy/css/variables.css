@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap');
+
+:root {
+    /* Cozy Visual Novel / Ren'Py Theme Tokens (Anikarta Preset) */
+    --bg-page: #FAF6F0;
+    --bg-surface: #FFFFFF;
+    --bg-card: #FAF6F0;
+    
+    --border-warm: #E2D9CE;
+    --border-warm-darker: #D6C9B8;
+    --color-divider: #E2D9CE;
+    
+    --text-main: #3D312A;
+    --text-sub: #8C7D72;
+    --text-muted: #8C7D72;
+    
+    --color-accent-primary: #3D312A;
+    --text-on-accent-primary: #FFFDF9;
+    
+    --color-accent-secondary: #E57A93;
+    --color-accent-rose: #E57A93;
+    --color-danger: #DC2646;
+    --color-danger-shadow: #9E172E;
+
+    --font-heading: 'Fredoka', cursive, sans-serif;
+    --font-body: 'Nunito', sans-serif;
+    
+    --border-radius: 14px;
+    --border-radius-sm: 10px;
+    --border-radius-lg: 20px;
+    --border-width: 2px;
+    
+    /* Warm Ombre Point Tiers */
+    --tier-100-bg: #EFA3B8;
+    --tier-100-shadow: #D48198;
+    --tier-200-bg: #EB9E9F;
+    --tier-200-shadow: #CE7E7F;
+    --tier-300-bg: #E7A994;
+    --tier-300-shadow: #C98973;
+    --tier-400-bg: #E5BA93;
+    --tier-400-shadow: #C79A72;
+    --tier-500-bg: #E6CE97;
+    --tier-500-shadow: #C8AF75;
+    --tier-cleared-bg: #EFEAE3;
+    --tier-cleared-text: #C4B9AC;
+    
+    /* Spacing & Sizes */
+    --space-xs: 8px;
+    --space-sm: 16px;
+    --space-md: 24px;
+    --space-lg: 32px;
+    --space-xl: 48px;
+    
+    --input-height: 46px;
+}

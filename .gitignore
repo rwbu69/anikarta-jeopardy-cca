@@ -1,34 +1,24 @@
-# Operating System Files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-[Dd]esktop.ini
-
-# IDE & Editor Configurations
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
-
-# Temporary & Log Files
+# Logs
+logs
 *.log
-*.tmp
-*.bak
-*.swp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Heavy Media & Background Images
-background*.png
-background*.jpg
-background*.jpeg
-background*.webp
-*.psd
+node_modules
+dist
+dist-ssr
+*.local
 
-# Media Content (tracks directory via .gitkeep)
-audio/*
-!audio/.gitkeep
-video/*
-!video/.gitkeep
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

@@ -1,0 +1,157 @@
+.board-container {
+    flex: 1;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.jeopardy-board {
+    display: grid;
+    gap: 14px;
+    width: 100%;
+    max-width: 1050px;
+    margin: 0 auto;
+}
+
+/* Category Headers (Pure Typography, No Cluttered Icons) */
+.board-header {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    line-height: 1.3;
+    padding: 14px 12px;
+    background: var(--bg-surface);
+    border: 2px solid var(--border-warm);
+    box-shadow: 0 3px 0 var(--border-warm);
+    border-radius: 16px;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+@media (min-width: 640px) {
+    .board-header {
+        font-size: 1.05rem;
+    }
+}
+
+/* Jeopardy Board Tiles: Warm Ombre Palette */
+.board-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: var(--font-heading);
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #3D312A;
+    cursor: pointer;
+    border-radius: 14px;
+    border: none;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.2s ease;
+    min-height: 68px;
+    user-select: none;
+}
+
+@media (min-width: 640px) {
+    .board-cell {
+        font-size: 2.1rem;
+        min-height: 74px;
+    }
+}
+
+.board-cell:hover:not(.played):not(.active) {
+    transform: translateY(-2px);
+}
+
+.board-cell:active:not(.played):not(.active) {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.12) !important;
+}
+
+.board-cell.active {
+    outline: 3px solid var(--text-main);
+    transform: translateY(-2px) scale(1.02);
+    z-index: 10;
+}
+
+/* Tier Ombre Colors */
+.board-cell.point-100, .board-cell.tier-100 { background-color: var(--tier-100-bg); box-shadow: 0 4px 0 var(--tier-100-shadow); }
+.board-cell.point-200, .board-cell.tier-200 { background-color: var(--tier-200-bg); box-shadow: 0 4px 0 var(--tier-200-shadow); }
+.board-cell.point-300, .board-cell.tier-300 { background-color: var(--tier-300-bg); box-shadow: 0 4px 0 var(--tier-300-shadow); }
+.board-cell.point-400, .board-cell.tier-400 { background-color: var(--tier-400-bg); box-shadow: 0 4px 0 var(--tier-400-shadow); }
+.board-cell.point-500, .board-cell.tier-500 { background-color: var(--tier-500-bg); box-shadow: 0 4px 0 var(--tier-500-shadow); }
+
+/* Cleared / Played State */
+.board-cell.played {
+    background-color: var(--tier-cleared-bg) !important;
+    color: var(--tier-cleared-text) !important;
+    box-shadow: none !important;
+    transform: translateY(3px) !important;
+    cursor: default;
+    opacity: 1 !important;
+    text-decoration: none !important;
+}
+
+/* Scoreboard Footer */
+.scoreboard-container {
+    width: 100%;
+    background: var(--bg-surface);
+    border-top: 2px solid rgba(230, 222, 195, 0.7);
+    padding: 14px 20px;
+}
+
+.scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    max-width: 1050px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+}
+
+.team-score {
+    background: var(--bg-surface);
+    border: 2px solid var(--border-warm);
+    box-shadow: 0 3px 0 var(--border-warm);
+    border-radius: 16px;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    min-width: 170px;
+    transition: transform 0.15s ease;
+}
+
+.team-color-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.team-name {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-main);
+    flex: 1;
+}
+
+.team-points {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-main);
+    min-width: 2rem;
+    text-align: right;
+}

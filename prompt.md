@@ -1,50 +1,39 @@
-# Prompt: Restyle ke JRPG / Visual Novel — Summer Love Music Quiz
+CHUNK 1: WHAT THIS IS AND THE GROUND RULES
 
-## Konteks
-Implementasi sebelumnya (dari prompt refactor & fitur) sudah jalan secara fungsional, tapi styling yang dihasilkan mengarah ke **neo-brutalism** — ini bukan arah yang saya mau. Prompt ini khusus untuk mengoreksi arah visual saja, tanpa mengubah logika/fitur yang sudah berjalan.
+You are redesigning the visual layer of a single-file web app called CCA ANIKARTA, a Jeopardy-style anime song quiz board used live by an anime club. Everything lives in one HTML file with Tailwind via CDN, Tone.js for sound effects, and vanilla JavaScript. Before changing anything, read the whole file, run it in a browser, and click through every feature so you know what currently works. This is a visual redesign only. Behavior, layout structure and logic must survive intact.
 
-Sebelum menulis kode apa pun, ikuti alur kerja bertahap berikut, dan **jangan lanjut ke tahap berikutnya sebelum saya menyetujui tahap sebelumnya**:
+Do not rename or remove any element id, any function name, or any inline onclick handler, because the markup and the JavaScript are wired together through them. Do not change the shape of the state object, the INITIAL_CATEGORIES data, the question and answer text, or the Indonesian UI copy. Keep Tone.js and every playSfx call as they are. Keep the keyboard behavior (Escape closes the question modal, Space reveals the answer), the 20-second stage timer, the typewriter effect on the question text, the five point tiers of 100 to 500, the reveal-marks-tile-as-played behavior, and the horizontal scroll fallback on narrow screens where the board has a 620px minimum width. Keep the overall page structure: header bar at the top, category row and point grid in the middle, team scoreboard footer at the bottom, and the same set of modals (question, audience quiz, reset, leaderboard, admin) with the same internal arrangement.
 
-1. **Audit** — telusuri seluruh styling yang ada saat ini (`style.css` dan CSS inline/tambahan lain yang mungkin ditulis di iterasi sebelumnya), identifikasi secara spesifik elemen mana saja yang membentuk kesan neo-brutalism (border, shadow, tipografi, warna) dan di file/selector mana letaknya.
-2. **Deep dive** — untuk setiap elemen UI utama (papan kategori, host modal/dialogue box, scoreboard, leaderboard, setup modal, theme editor admin), jelaskan pendekatan restyle konkret ke arah JRPG/Visual Novel, dan bagaimana cara memastikan sistem theme (warna/font dari admin panel) tetap kompatibel dengan gaya baru ini.
-3. **Implementation plan** — rencana perubahan CSS/struktur (termasuk apakah perlu markup tambahan untuk elemen dekoratif seperti frame/corner-clip), urutan pengerjaan per komponen.
-4. **Execution** — baru menulis kode setelah rencana di atas saya setujui.
+Because the JavaScript builds the board, scoreboard and leaderboard rows from template strings full of Tailwind classes, restyling means editing those strings too. The cleanest approach is to move the visual decisions into named classes in the style block (for example a tile class, a panel class, a category-header class, a stamp class) and have the template strings reference those names, so the look lives in one place and the JavaScript stays readable.
 
-Seluruh dokumen di tahap Audit, Deep Dive, dan Implementation Plan ditulis dalam **Bahasa Indonesia**.
+CHUNK 2: THE CONCEPT
 
----
+The current look is a soft, cozy visual novel in cream and pastel. Replace it with the feel of an anime soundtrack booklet crossed with a late-night karaoke bar: printed paper, ink outlines, flat spot colors, and rubber-stamp details. It should feel like something a club member designed by hand for their own event, not like a SaaS template. The board is a tracklist, each tile is a numbered track slot, and the question window is a dialogue box from a visual novel, which is a nod worth keeping because it fits the theme.
 
-## Yang Harus Dihapus/Dihindari: Neo-Brutalism
-Hapus/hindari ciri-ciri berikut di seluruh aplikasi:
-- Border hitam tebal (2–4px solid black) di sekeliling hampir semua elemen (card, tombol, modal, dll).
-- Drop shadow keras/offset tanpa blur, seperti `box-shadow: 4px 4px 0px #000`.
-- Warna flat, saturated, kontras kasar tanpa gradasi/nuansa.
-- Tipografi mono/grotesque yang sengaja terlihat "kasar" atau "unstyled".
-- Layout yang sengaja terlihat mentah/asal sebagai gaya.
+CHUNK 3: VISUAL LANGUAGE
 
----
+Surfaces are warm off-white paper, around #F3ECDD, with a very subtle paper grain or fine halftone dot texture on the page background created with CSS only, kept faint enough that text stays crisp. The main ink color is a deep blue-black, around #1C1B2E, used for all text, all outlines, and all shadows. The single signature accent is a hanko-stamp vermilion, around #E3412B, used sparingly for the reset button, the low-time warning, the muted-sound icon, and stamped labels. Everything else should come from five flat spot colors, one per category column: a sakura pink, a mustard yellow, a seafoam green, a powder blue and a lavender, each slightly desaturated so they sit well next to the ink and paper. Choose exact hex values yourself, check that the ink text has strong contrast on every one of them, and define all of them as CSS variables on :root so they can be changed in one place.
 
-## Arah Visual Baru: JRPG / Visual Novel
+Typography is where most of the personality comes from. Use a heavy, characterful display face for category names and point numbers, such as Dela Gothic One, and a clean readable Japanese-leaning sans for everything else, such as Zen Kaku Gothic New. Use a monospace such as DM Mono for small labels, the timer, the song counter and score numbers, so they read like tracklist metadata. Point values on tiles should be large and confident. Category names should be uppercase in the display face and may use tight tracking.
 
-### Elemen UI yang perlu direstyle
-- **Host modal / area reveal jawaban → dialogue box**: ganti jadi panel bergaya text box dialog visual novel — frame berlapis (border ganda tipis, bukan satu garis tebal solid), sudut dipotong (corner-clip) atau ornamen kecil di pojok, semi-transparan/blur ringan di atas background, bukan modal putih polos dengan border tebal.
-- **Nama tim (di scoreboard, host modal, leaderboard) → name plate**: elemen kecil berbingkai/bertekstur untuk menampilkan nama tim, mirip name tag karakter di VN, bukan sekadar teks/chip flat.
-- **Scoreboard & leaderboard → HUD panel**: didesain seperti panel status/HP bar di JRPG, dengan frame dekoratif dan hierarki visual yang jelas antara tim teratas dan lainnya — bukan card generik yang cuma dibedakan urutan.
-- **Papan kategori/grid poin**: pertimbangkan treatment seperti menu/command list ala JRPG (misalnya frame kotak dengan aksen sudut) untuk tiap sel, alih-alih grid kotak polos.
-- **Setup modal & theme editor admin**: tetap fungsional dan jelas untuk dipakai (prioritaskan usability di sini), tapi framing visualnya (border, panel) mengikuti bahasa desain yang sama supaya konsisten dengan tampilan utama game.
+Shape and depth follow one rule. Every panel, tile, button and input gets a 2px ink outline and a hard offset shadow in solid ink, about 4px down and 3px right, with no blur anywhere. Corner radius is small and consistent, around 6 to 8px, applied everywhere. Pressing a button or tile moves it into its shadow, so the offset collapses to zero and the element shifts by the same amount, which makes it feel physically pressed. Do not use gradients on surfaces, glassmorphism, glows, blurred backdrops, floating blobs, drop-shadow stacks, neon colors, or emoji. The modal overlay should be a flat translucent ink color with no backdrop blur.
 
-### Tipografi
-Cari pasangan font yang lebih spesifik ke nuansa judul game/anime — font display yang punya karakter tebal/dramatis tapi tetap terbaca untuk heading & judul kategori, dipasangkan dengan font body yang bersih dan nyaman dibaca untuk teks dialog/deskripsi panjang. Jelaskan opsi yang dipertimbangkan dan alasan pemilihan akhirnya di tahap Deep Dive.
+Per-element direction: category headers become ink-filled blocks with paper-colored display text and a small colored tab or stripe matching the column's spot color. Tiles take their column's spot color, show the point value large in ink, and carry a tiny monospace track number in one corner. Cleared tiles turn back to paper with a dashed outline, no shadow, and a faint tilted stamp reading SELESAI in the vermilion accent, so a finished board looks like it was literally stamped through. The header bar is paper with a bottom ink rule, the title set in the display face, and the song counter as a monospace tag. The question modal keeps its visual-novel dialogue box but restyled: a thick ink-bordered paper box, the category and points as a slightly tilted sticker-style nameplate, the question inside a lined or ruled text area, and the revealed answer in a mint-colored strip with an ink border. The team scoreboard cards use a chunky square swatch in the team color, the team name in the display face, and the score in monospace, with the plus and minus controls styled as small ink-outlined buttons. Leaderboard rows read like a ranked tracklist with the rank number as a monospace index. The admin modal should be calm and utilitarian: same outlines and shadows, but with clear labels, comfortable input sizes and visible focus states.
 
-### Warna
-Base palette tetap **teal, pink, dan hitam** (sejalan dengan brief sebelumnya dan default theme di admin panel), tapi diterapkan dengan sensibilitas VN/JRPG — misalnya gradasi halus untuk memberi kedalaman pada panel/frame, bukan warna flat rata seperti neo-brutalism. Gradient/aksen dekoratif boleh dipakai selama jadi elemen signature yang disengaja (bukan wash tempelan di background setiap card).
+CHUNK 4: MOTION AND FEEDBACK
 
-### Motion
-Kalau ada animasi, ambil inspirasi dari transisi visual novel: dialogue box yang "muncul"/slide dari tepi layar, teks yang muncul bertahap ala typewriter saat jawaban dibuka. Pakai di momen penting saja (reveal jawaban, munculnya leaderboard akhir), jangan ditaburkan di semua elemen sebagai hover/entrance effect generik.
+Keep motion short and purposeful. On first load, the tiles may drop in with a quick staggered rise, roughly 30 to 40ms apart, playing once. Modals fade and slide up about 8px over about 150ms. Tile and button presses use the offset-shadow collapse described above. When a team's score changes, the number gives a brief bump. When the stage timer drops to five seconds or less, the timer pill switches to vermilion and gently pulses. The little next-arrow in the dialogue box keeps its slow bob. Wrap all non-essential animation in a prefers-reduced-motion check so users who opt out get none of it.
 
----
+CHUNK 5: RESPONSIVENESS AND ACCESSIBILITY
 
-## Batasan
-- Jangan mengubah logika/fungsi yang sudah berjalan (scoring, tie-breaker, autoplay webm/audio, dsb.) — murni restyle visual.
-- Sistem theme di admin panel (poin modularitas dari prompt sebelumnya) harus tetap berfungsi: warna/font/logo tetap bisa diganti dari admin tanpa sentuh kode, hanya saja sekarang harus cocok dengan bahasa desain JRPG/VN, bukan neo-brutalism.
-- Sertakan referensi konkret (nama game/genre visual novel/JRPG yang jadi acuan gaya) di tahap Deep Dive, supaya arah desainnya jelas dan bisa saya cek sebelum lanjut ke implementasi.
+Preserve the current responsive behavior, including the minimum board width with horizontal scroll, and verify the result at 1440px, 768px and 390px wide. The plus and minus score buttons currently only appear on hover, which makes them unreachable on touch screens, so on devices without hover keep them visible at reduced emphasis. Every icon-only button must keep its title and also get an aria-label. Add clear focus-visible outlines in the accent color. The universal user-select: none rule currently blocks text selection inside the admin inputs and textarea, so scope it away from form fields. Keep text contrast at WCAG AA or better everywhere, including ink on every spot color.
+
+CHUNK 6: ONE EXISTING QUIRK TO HANDLE
+
+The data defines four categories, but the header row and the tile grid are hard-coded to five columns, so the board currently shows an empty fifth column, and the song counter text starts as "0 / 25" while the real total is 20. Make the column count follow the number of categories (set a CSS variable from JavaScript and use it in the grid template) so the board has no gap and adding a fifth category later just works, and make the initial counter text consistent with the computed total. Tell me when you did this, since it changes the board's width slightly compared with today.
+
+CHUNK 7: HOW TO WORK AND HOW TO CHECK
+
+Work in small steps and commit after each one so any step can be reverted: first the tokens, fonts and base page, then the header and footer, then the board, then the modals, then the motion and accessibility pass. After each step, open the page and take screenshots at the three widths. When you finish, manually test these flows and confirm they all behave exactly as before: opening a tile, the typewriter text, playing and stopping the audio clue, starting and pausing the timer, revealing the answer with the button and with Space, awarding points to each team, toggling the played state, closing with Escape, the audience quiz cycling and revealing, both reset options, adding a team in the leaderboard, renaming a team by clicking its name, muting sound, and editing a category name and a question in the admin panel. If anything you change risks breaking one of these, stop and tell me instead of guessing.
+
+Finally, do not add new libraries, build tools, images or external assets beyond the Google Fonts you need, and keep the whole thing as one self-contained HTML file.

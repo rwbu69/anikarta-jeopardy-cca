@@ -1,0 +1,129 @@
+/* Audience Quiz Styles */
+.audience-container {
+    flex: 1;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 1050px;
+    margin: 0 auto;
+}
+
+.audience-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 14px;
+    width: 100%;
+    flex: 1;
+}
+
+.audience-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #FFFFFF;
+    border: 2px solid var(--border-warm);
+    box-shadow: 0 3px 0 var(--border-warm);
+    border-radius: 16px;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.15s ease;
+    min-height: 80px;
+    padding: 12px 10px;
+}
+
+.audience-card:hover:not(.played) {
+    transform: translateY(-2px);
+    border-color: var(--border-warm-darker);
+}
+
+.audience-card:active:not(.played) {
+    transform: translateY(2px);
+    box-shadow: 0 0px 0 transparent !important;
+}
+
+.audience-card-number {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1;
+}
+
+.audience-card-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-sub);
+    margin-top: 4px;
+}
+
+.audience-card.played {
+    background-color: var(--tier-cleared-bg) !important;
+    border-color: var(--border-warm) !important;
+    cursor: default;
+    box-shadow: none !important;
+    transform: translateY(2px) !important;
+}
+
+.audience-card.played .audience-card-number,
+.audience-card.played .audience-card-tag {
+    color: var(--tier-cleared-text) !important;
+}
+
+/* Modal Content Tuning for Audience */
+.audience-modal-content {
+    max-width: 640px;
+    width: 95%;
+    text-align: center;
+}
+
+.audience-modal-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.audience-stage-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.audience-reveal-box {
+    margin-top: 18px;
+    padding: 18px 20px;
+    background: #EEF7F2;
+    border: 1.5px solid #B8DFC8;
+    border-radius: 16px;
+    text-align: center;
+    color: #23533A;
+}
+
+@media (max-width: 900px) {
+    .audience-grid {
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(5, 1fr);
+        gap: 12px;
+    }
+    .audience-card-number {
+        font-size: 1.9rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .audience-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    .audience-card-number {
+        font-size: 1.7rem;
+    }
+}

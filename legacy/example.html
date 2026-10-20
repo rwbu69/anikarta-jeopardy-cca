@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCA ANIKARTA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-cream: #FAF6F0;
+            --surface: #FFFFFF;
+            --border-warm: #E2D9CE;
+            --text-main: #3D312A;
+            --text-muted: #8C7D72;
+            --accent-rose: #E57A93;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-cream);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Soft Ren'Py / Cozy VN Window Surface */
+        .vn-panel {
+            background: var(--surface);
+            border: 2px solid var(--border-warm);
+            box-shadow: 0 3px 0 var(--border-warm);
+        }
+
+        /* Tactile Soft Button */
+        .vn-btn {
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+        }
+
+        .vn-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .vn-btn:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 0px 0 transparent !important;
+        }
+
+        /* Jeopardy Board Tiles: Warm Ombre Palette inspired by original layout */
+        .quiz-tile {
+            border-radius: 14px;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            color: #3D312A;
+            transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.2s ease;
+            cursor: pointer;
+        }
+
+        .quiz-tile:hover:not(.tile-cleared) {
+            transform: translateY(-2px);
+        }
+
+        .quiz-tile:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.12) !important;
+        }
+
+        .tier-100 { background-color: #EFA3B8; box-shadow: 0 4px 0 #D48198; }
+        .tier-200 { background-color: #EB9E9F; box-shadow: 0 4px 0 #CE7E7F; }
+        .tier-300 { background-color: #E7A994; box-shadow: 0 4px 0 #C98973; }
+        .tier-400 { background-color: #E5BA93; box-shadow: 0 4px 0 #C79A72; }
+        .tier-500 { background-color: #E6CE97; box-shadow: 0 4px 0 #C8AF75; }
+
+        .tile-cleared {
+            background-color: #EFEAE3 !important;
+            color: #C4B9AC !important;
+            box-shadow: none !important;
+            transform: translateY(3px);
+        }
+
+        /* Authentic Visual Novel Dialogue Box */
+        .vn-textbox {
+            background: #FFFDF9;
+            border: 2.5px solid #D6C9B8;
+            box-shadow: 0 8px 24px rgba(61, 49, 42, 0.12), 0 4px 0 #D6C9B8;
+            border-radius: 20px;
+        }
+
+        @keyframes vnPulse {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(3px); }
+        }
+        .vn-next-indicator {
+            animation: vnPulse 1s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between min-h-screen">
+
+    <header class="w-full bg-white border-b-2 border-[#E6DEC3]/70 px-4 sm:px-8 py-3">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            
+            <!-- Left: Title & Clean Counter Pill (Words only, zero clutter) -->
+            <div class="flex items-center gap-3.5">
+                <h1 class="font-display text-xl sm:text-2xl font-bold tracking-tight text-[#3D312A]">
+                    CCA ANIKARTA
+                </h1>
+                <span id="songCounterText" class="text-xs sm:text-sm font-bold text-[#7A6B60] bg-[#F5EFE6] border border-[#E2D9CE] px-3 py-1 rounded-full">
+                    Daftar Lagu: 0 / 25
+                </span>
+            </div>
+
+            <!-- Right: Action Bar (Words for specific actions, pure SVG icons for utilities) -->
+            <div class="flex items-center gap-2">
+                <!-- Text-only buttons where words communicate best -->
+                <button onclick="openAudienceQuizModal()" class="vn-panel vn-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold text-[#3D312A] hover:bg-[#FAF6F0]">
+                    Kuis Penonton
+                </button>
+                <button onclick="openResetConfirmModal()" class="vn-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-[#DC2646] hover:bg-[#C81E3B] shadow-[0_3px_0_#9E172E]">
+                    Reset Papan
+                </button>
+
+                <div class="h-5 w-[1.5px] bg-[#E2D9CE] mx-1"></div>
+
+                <!-- Icon-only buttons where universal icons communicate best -->
+                <button onclick="openLeaderboardModal()" class="vn-panel vn-btn w-9 h-9 rounded-xl flex items-center justify-center text-[#3D312A] hover:bg-[#FAF6F0]" title="Leaderboard">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                    </svg>
+                </button>
+
+                <button onclick="toggleAudioMute()" id="btnSoundToggle" class="vn-panel vn-btn w-9 h-9 rounded-xl flex items-center justify-center text-[#3D312A] hover:bg-[#FAF6F0]" title="Suara Efek">
+                    <svg id="iconSoundOn" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                    </svg>
+                    <svg id="iconSoundOff" class="w-4 h-4 hidden text-[#DC2646]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+                    </svg>
+                </button>
+
+                <button onclick="openAdminModal()" class="vn-panel vn-btn w-9 h-9 rounded-xl flex items-center justify-center text-[#3D312A] hover:bg-[#FAF6F0]" title="Pengaturan Admin">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-5xl mx-auto flex-1 flex flex-col justify-center px-4 py-6">
+        <div class="overflow-x-auto pb-2">
+            <div class="min-w-[620px]">
+                <!-- 5 Category Headers (Pure Typography, No Cluttered Icons) -->
+                <div id="categoryHeaderGrid" class="grid grid-cols-5 gap-3.5 mb-3.5">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- 25 Point Tiles -->
+                <div id="boardGrid" class="grid grid-cols-5 gap-3.5">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="w-full bg-white border-t-2 border-[#E6DEC3]/70 py-3.5 px-4">
+        <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-3.5" id="teamScoreboardContainer">
+            <!-- Populated by JS -->
+        </div>
+    </footer>
+
+    <div id="questionModal" class="fixed inset-0 bg-[#2C221E]/50 backdrop-blur-[2px] z-50 hidden items-center justify-center p-4">
+        <div class="w-full max-w-2xl">
+            
+            <!-- Authentic VN Textbox Window -->
+            <div class="vn-textbox p-6 sm:p-8 relative">
+                
+                <!-- Top VN Nameplate Tag (Category + Point Value) -->
+                <div class="flex items-center justify-between gap-2 mb-5">
+                    <div class="inline-flex items-center gap-2 bg-[#3D312A] text-[#FFFDF9] px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold tracking-wide">
+                        <span id="modalCategoryBadge">MAHOU SHOUJO</span>
+                        <span class="opacity-40">•</span>
+                        <span id="modalPointsBadge" class="text-[#F6C967]">100</span>
+                    </div>
+
+                    <!-- Top-Right Icon-Only Controls: Audio Play, Timer, Mark Played, Close -->
+                    <div class="flex items-center gap-2">
+                        <!-- Play Audio Clue (Icon Only) -->
+                        <button id="btnPlaySynthClue" onclick="toggleMysterySynthTrack()" class="vn-panel vn-btn w-9 h-9 rounded-full flex items-center justify-center text-[#3D312A] hover:bg-[#FAF6F0]" title="Putar Petunjuk Audio">
+                            <svg id="iconPlayClue" class="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                            <svg id="iconStopClue" class="w-4 h-4 hidden text-[#DC2646]" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="6" y="6" width="12" height="12" rx="2"/>
+                            </svg>
+                        </button>
+
+                        <!-- Timer Pill -->
+                        <button onclick="toggleStageTimer()" class="vn-panel vn-btn h-9 px-3 rounded-full flex items-center gap-1.5 text-xs font-bold text-[#3D312A] hover:bg-[#FAF6F0]" title="Mulai / Jeda Waktu">
+                            <svg class="w-3.5 h-3.5 text-[#8C7D72]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            <span id="stageTimerDisplay">20s</span>
+                        </button>
+
+                        <!-- Toggle Card Completed Status (Icon Only) -->
+                        <button id="btnTogglePlayedState" onclick="toggleCurrentTileStatus()" class="vn-panel vn-btn w-9 h-9 rounded-full flex items-center justify-center text-[#3D312A] hover:bg-[#FAF6F0]" title="Tandai Selesai / Buka Kembali">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                        </button>
+
+                        <!-- Close Modal (Icon Only) -->
+                        <button onclick="closeQuestionModal()" class="vn-panel vn-btn w-9 h-9 rounded-full flex items-center justify-center text-[#8C7D72] hover:text-[#3D312A] hover:bg-[#FAF6F0]" title="Tutup (ESC)">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main VN Dialogue Text Area -->
+                <div class="min-h-[110px] flex flex-col justify-center bg-[#FAF6F0] border border-[#E6DEC3] rounded-2xl p-5 mb-4 relative">
+                    <p id="modalQuestionText" class="text-lg sm:text-xl font-bold text-[#3D312A] leading-relaxed">
+                        <!-- Typewriter text -->
+                    </p>
+                    <span class="vn-next-indicator absolute bottom-3 right-4 text-[#C5B4A5] text-xs">▼</span>
+                </div>
+
+                <!-- Revealed Answer Area -->
+                <div id="modalAnswerBox" class="hidden mb-5 px-5 py-3.5 rounded-2xl bg-[#EEF7F2] border border-[#B8DFC8] text-[#23533A]">
+                    <div id="modalAnswerText" class="font-display text-base sm:text-lg font-bold"></div>
+                </div>
+
+                <!-- Bottom VN Choice Bar: Reveal Answer & Award Team Points -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#EFEAE2]">
+                    <button id="btnRevealAnswer" onclick="revealModalAnswer()" class="vn-panel vn-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-[#3D312A] hover:bg-[#FAF6F0]">
+                        Buka Jawaban
+                    </button>
+
+                    <div id="modalTeamAwardButtons" class="flex flex-wrap items-center gap-2">
+                        <!-- Team award buttons populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Kuis Penonton Modal -->
+    <div id="audienceModal" class="fixed inset-0 bg-[#2C221E]/50 backdrop-blur-[2px] z-50 hidden items-center justify-center p-4">
+        <div class="vn-textbox w-full max-w-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-display text-lg font-bold text-[#3D312A]">Kuis Penonton</h2>
+                <button onclick="closeModalById('audienceModal')" class="vn-panel vn-btn w-8 h-8 rounded-full flex items-center justify-center text-[#8C7D72]">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="bg-[#FAF6F0] border border-[#E6DEC3] rounded-2xl p-4 mb-4 min-h-[100px] flex flex-col justify-center">
+                <p id="audienceQuestionText" class="font-bold text-base text-[#3D312A]"></p>
+                <p id="audienceAnswerText" class="hidden mt-3 pt-2 border-t border-[#E6DEC3] text-sm font-bold text-[#2D6A4F]"></p>
+            </div>
+            <div class="flex justify-between gap-2">
+                <button onclick="revealAudienceAnswer()" class="vn-panel vn-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-[#3D312A]">
+                    Buka Jawaban
+                </button>
+                <button onclick="spinAudienceQuiz()" class="vn-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-[#3D312A] text-white">
+                    Soal Berikutnya
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Papan Modal -->
+    <div id="resetModal" class="fixed inset-0 bg-[#2C221E]/50 backdrop-blur-[2px] z-50 hidden items-center justify-center p-4">
+        <div class="vn-textbox w-full max-w-sm p-6 text-center">
+            <h2 class="font-display text-lg font-bold text-[#3D312A] mb-2">Reset Papan Permainan?</h2>
+            <p class="text-sm text-[#8C7D72] mb-5">
+                Pilih apakah ingin mengulang kartu lagu saja atau bersama skor tim.
+            </p>
+            <div class="flex flex-col gap-2">
+                <button onclick="executeBoardReset(false)" class="vn-panel vn-btn w-full py-2.5 rounded-xl text-sm font-bold text-[#3D312A] hover:bg-[#FAF6F0]">
+                    Reset Kartu Lagu Saja
+                </button>
+                <button onclick="executeBoardReset(true)" class="vn-btn w-full py-2.5 rounded-xl text-sm font-bold bg-[#DC2646] text-white shadow-[0_3px_0_#9E172E]">
+                    Reset Kartu & Skor Tim
+                </button>
+                <button onclick="closeModalById('resetModal')" class="mt-1 py-2 text-xs font-bold text-[#8C7D72] hover:text-[#3D312A]">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboardModal" class="fixed inset-0 bg-[#2C221E]/50 backdrop-blur-[2px] z-50 hidden items-center justify-center p-4">
+        <div class="vn-textbox w-full max-w-md p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-display text-lg font-bold text-[#3D312A]">Leaderboard</h2>
+                <button onclick="closeModalById('leaderboardModal')" class="vn-panel vn-btn w-8 h-8 rounded-full flex items-center justify-center text-[#8C7D72]">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div id="leaderboardList" class="space-y-2 mb-4"></div>
+            <div class="flex justify-end">
+                <button onclick="addNewTeam()" class="vn-panel vn-btn px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#3D312A]">
+                    + Tambah Tim
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div id="adminModal" class="fixed inset-0 bg-[#2C221E]/50 backdrop-blur-[2px] z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="vn-textbox w-full max-w-2xl p-6 my-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-display text-lg font-bold text-[#3D312A]">Pengaturan Papan & Soal</h2>
+                <button onclick="closeModalById('adminModal')" class="vn-panel vn-btn w-8 h-8 rounded-full flex items-center justify-center text-[#8C7D72]">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-[#8C7D72] uppercase block mb-2">Nama Kategori</label>
+                    <div id="adminCategoryInputs" class="grid grid-cols-1 sm:grid-cols-5 gap-2"></div>
+                </div>
+
+                <div class="bg-[#FAF6F0] border border-[#E6DEC3] p-4 rounded-2xl space-y-3">
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="text-xs font-bold text-[#8C7D72] block mb-1">Kategori</label>
+                            <select id="adminSelectCat" onchange="loadAdminTileEditor()" class="w-full vn-panel rounded-xl px-3 py-1.5 text-sm font-bold"></select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-[#8C7D72] block mb-1">Poin</label>
+                            <select id="adminSelectTier" onchange="loadAdminTileEditor()" class="w-full vn-panel rounded-xl px-3 py-1.5 text-sm font-bold">
+                                <option value="0">100</option>
+                                <option value="1">200</option>
+                                <option value="2">300</option>
+                                <option value="3">400</option>
+                                <option value="4">500</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-[#8C7D72] block mb-1">Pertanyaan</label>
+                        <textarea id="adminInputQuestion" rows="2" class="w-full vn-panel rounded-xl p-2.5 text-sm font-bold"></textarea>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-[#8C7D72] block mb-1">Jawaban</label>
+                        <input id="adminInputAnswer" type="text" class="w-full vn-panel rounded-xl p-2.5 text-sm font-bold">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-5">
+                <button onclick="closeModalById('adminModal')" class="vn-panel vn-btn px-4 py-2 rounded-xl text-xs font-bold text-[#3D312A]">
+                    Batal
+                </button>
+                <button onclick="saveAdminChanges()" class="vn-btn px-5 py-2 rounded-xl text-xs font-bold bg-[#3D312A] text-white">
+                    Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const POINT_TIERS = [100, 200, 300, 400, 500];
+
+        const INITIAL_CATEGORIES = [
+            {
+                id: 'mahou',
+                name: 'MAHOU SHOUJO',
+                questions: [
+                    { q: "Lagu tema ikonik yang dibuka dengan kalimat 'Gomen ne sunao ja nakute' dari anime gadis penyihir tahun 90-an. Sebutkan judul lagunya!", a: "Moonlight Densetsu - DALI (Sailor Moon)" },
+                    { q: "Dinyanyikan oleh duo ClariS, lagu pembuka yang ceria ini menyembunyikan cerita kelam tentang kontrak Kyubey. Apa judul lagu dan animenya?", a: "Connect - ClariS (Puella Magi Madoka Magica)" },
+                    { q: "Lagu opening berenergi tinggi untuk petualangan Sakura Kinomoto mengumpulkan Clow Cards!", a: "Catch You Catch Me - GUMI (Cardcaptor Sakura)" },
+                    { q: "Dalam anime Symphogear, para gadis bertarung sambil bernyanyi. Lagu opening musim pertamanya dinyanyikan oleh Nana Mizuki. Apa judulnya?", a: "Synchrogazer - Nana Mizuki (Senki Zesshou Symphogear)" },
+                    { q: "Lagu opening ikonik dari Ojamajo Doremi yang penuh semangat penyihir cilik!", a: "Ojamajo Carnival!! - MAHO-do (Ojamajo Doremi)" }
+                ]
+            },
+            {
+                id: 'edgy',
+                name: 'EDGY',
+                questions: [
+                    { q: "Dimulai dengan bisikan 'Oshiete, oshiete yo sono shikumi wo...', sebutkan judul dan penyanyinya!", a: "Unravel - TK from Ling Tosite Sigure (Tokyo Ghoul)" },
+                    { q: "Lagu opening pertama Death Note yang dibawakan oleh band Nightmare saat Light Yagami mulai menulis nama di bukunya.", a: "the WORLD - Nightmare (Death Note)" },
+                    { q: "Lagu pembuka berbahasa Inggris dari anime klasik tentang gadis bernama Lain di dunia Wired.", a: "Duvet - bôa (Serial Experiments Lain)" },
+                    { q: "Dinyanyikan oleh Yousei Teikoku dengan nuansa gothic rock untuk permainan bertahan hidup pemegang buku harian masa depan.", a: "Kuusou Mesorogiwi - Yousei Teikoku (Mirai Nikki)" },
+                    { q: "Lagu heavy metal mengejutkan yang menjadi Opening ke-2 Death Note karya Maximum the Hormone!", a: "What's up, people?! - Maximum the Hormone (Death Note)" }
+                ]
+            },
+            {
+                id: 'mecha',
+                name: 'MECHA',
+                questions: [
+                    { q: "Lagu anime legendaris yang dinyanyikan oleh Yoko Takahashi saat Shinji Ikari diminta naik ke robot EVA-01!", a: "A Cruel Angel's Thesis - Yoko Takahashi (Neon Genesis Evangelion)" },
+                    { q: "Teriakan 'JIBUN WO!' selalu menggema setiap kali lagu band FLOW ini diputar untuk pemberontakan Lelouch.", a: "COLORS - FLOW (Code Geass)" },
+                    { q: "Lagu penuh semangat menembus surga dengan bor raksasa yang dinyanyikan oleh Shoko Nakagawa!", a: "Sorairo Days - Shoko Nakagawa (Tengen Toppa Gurren Lagann)" },
+                    { q: "Dinyanyikan oleh YOASOBI, lagu ini mengiringi kisah Suletta Mercury dan Gundam Aerial.", a: "Shukufuku - YOASOBI (Mobile Suit Gundam: The Witch from Mercury)" },
+                    { q: "Lagu sisipan orkestra-rap 'Row! Row! Fight the Power!' di klimaks Gurren Lagann!", a: "Libera Me From Hell - Tarantula & Yuri Kasahara (Gurren Lagann)" }
+                ]
+            },
+            {
+                id: 'game',
+                name: 'GAME ADAPTATION',
+                questions: [
+                    { q: "Lagu emosional yang langsung membuat penonton teringat adegan bulan di adaptasi anime Cyberpunk: Edgerunners.", a: "I Really Want to Stay at Your House - Rosa Walton (Cyberpunk: Edgerunners)" },
+                    { q: "Dinyanyikan oleh Kanako Itou, lagu tentang perjalanan waktu dan garis dunia Steins;Gate!", a: "Hacking to the Gate - Kanako Itou (Steins;Gate)" },
+                    { q: "Lagu acid-jazz stylish yang dinyanyikan oleh Lyn Inaizumi untuk adaptasi anime Phantom Thieves of Hearts!", a: "Break In To Break Out - Lyn (Persona 5: The Animation)" },
+                    { q: "Lagu megah dari Aimer yang mengiringi perang Holy Grail rute Rin Tohsaka di Fate/stay night: Unlimited Blade Works!", a: "Brave Shine - Aimer (Fate/stay night: UBW)" },
+                    { q: "Lagu tragedi keluarga Ushiromiya yang sarat paduan suara bahasa Italia di adaptasi visual novel misteri 07th Expansion!", a: "Katayoku no Tori - Akiko Shikata (Umineko no Naku Koro ni)" }
+                ]
+            },
+            {
+                id: 'military',
+                name: 'MILITARY',
+                questions: [
+                    { q: "Lagu anthem Survey Corps karya Linked Horizon yang membuat penonton otomatis memberi hormat!", a: "Guren no Yumiya / Shinzou wo Sasageyo! - Linked Horizon (Attack on Titan)" },
+                    { q: "Dinyanyikan oleh YUI, lagu pembuka pertama dari kisah dua bersaudara alkemis negara Edward dan Alphonse Elric.", a: "again - YUI (Fullmetal Alchemist: Brotherhood)" },
+                    { q: "Lagu pembuka karya MYTH & ROID untuk kisah reinkarnasi prajurit penyihir cilik Tanya Degurechaff!", a: "JINGO JUNGLE - MYTH & ROID (Youjo Senki)" },
+                    { q: "Lagu penutup menyentuh dari anime militer 86 -Eighty Six- yang dinyanyikan oleh SawanoHiroyuki[nZk]:mizuki.", a: "Avid - SawanoHiroyuki[nZk]:mizuki (86 -Eighty Six-)" },
+                    { q: "Lagu pembuka untuk kisah perjalanan dua gadis dengan kendaraan Kettenkrad di dunia pasca-apokaliptik!", a: "Ugoku, Ugoku - Chima (Girls' Last Tour)" }
+                ]
+            }
+        ];
+
+        const AUDIENCE_QUIZ_POOL = [
+            {
+                q: "Sebutkan 3 lagu Opening Anime yang dinyanyikan oleh YOASOBI atau LiSA dalam 10 detik!",
+                a: "Idol (Oshi no Ko), Gurenge (Demon Slayer), Crossing Field (SAO), Kaibutsu (Beastars), Shukufuku (Gundam Witch)."
+            },
+            {
+                q: "Senandungkan melodi reff 'Blue Bird' (Naruto Shippuden) dengan lantang!",
+                a: "Habataitara modoranai to itte~ Mezashita no wa aoi aoi ano sora! (Ikimonogakari)"
+            },
+            {
+                q: "Anime manakah yang memiliki lagu Ending ikonik berjudul 'Fly Me to the Moon'?",
+                a: "Neon Genesis Evangelion"
+            },
+            {
+                q: "Sebutkan judul lagu Opening anime Mashle Season 2 oleh Creepy Nuts!",
+                a: "Bling-Bang-Bang-Born - Creepy Nuts"
+            }
+        ];
+
+        let state = {
+            categories: JSON.parse(JSON.stringify(INITIAL_CATEGORIES)),
+            playedTiles: {},
+            teams: [
+                { id: 'A', name: 'A', color: '#EF4444', score: 0 },
+                { id: 'B', name: 'B', color: '#F59E0B', score: 0 }
+            ],
+            activeTile: null,
+            audioMuted: false,
+            synthPlaying: false,
+            timerSeconds: 20,
+            timerInterval: null
+        };
+
+        let sfxSynth = null;
+        let melodyLoop = null;
+        let typewriterTimer = null;
+
+        function ensureAudioReady() {
+            if (state.audioMuted) return false;
+            try {
+                if (Tone.context.state !== 'running') Tone.start();
+                if (!sfxSynth) {
+                    sfxSynth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.01, decay: 0.12, sustain: 0.05, release: 0.2 }
+                    }).toDestination();
+                    sfxSynth.volume.value = -10;
+                }
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function playSfx(type) {
+            if (!ensureAudioReady()) return;
+            const now = Tone.now();
+            try {
+                if (type === 'tile') {
+                    sfxSynth.triggerAttackRelease(['C5', 'G5'], '16n', now);
+                } else if (type === 'scoreUp') {
+                    sfxSynth.triggerAttackRelease('E5', '16n', now);
+                    sfxSynth.triggerAttackRelease('A5', '8n', now + 0.07);
+                } else if (type === 'scoreDown') {
+                    sfxSynth.triggerAttackRelease('D4', '8n', now);
+                } else if (type === 'reveal') {
+                    sfxSynth.triggerAttackRelease(['F4', 'A4', 'C5'], '8n', now);
+                } else if (type === 'click') {
+                    sfxSynth.triggerAttackRelease('G5', '32n', now);
+                }
+            } catch (e) {}
+        }
+
+        function toggleAudioMute() {
+            state.audioMuted = !state.audioMuted;
+            document.getElementById('iconSoundOn').classList.toggle('hidden', state.audioMuted);
+            document.getElementById('iconSoundOff').classList.toggle('hidden', !state.audioMuted);
+            if (state.audioMuted && state.synthPlaying) stopMysterySynthTrack();
+        }
+
+        function renderBoard() {
+            const headerGrid = document.getElementById('categoryHeaderGrid');
+            const boardGrid = document.getElementById('boardGrid');
+            headerGrid.innerHTML = '';
+            boardGrid.innerHTML = '';
+
+            // 1. Clean Text-Only Category Cards
+            state.categories.forEach((cat) => {
+                const headerCard = document.createElement('div');
+                headerCard.className = 'vn-panel rounded-2xl px-3 py-3.5 flex items-center justify-center text-center min-h-[70px]';
+                headerCard.innerHTML = `
+                    <h2 class="font-display font-bold text-sm sm:text-base text-[#3D312A] uppercase tracking-wide leading-snug">
+                        ${cat.name}
+                    </h2>
+                `;
+                headerGrid.appendChild(headerCard);
+            });
+
+            // 2. Clean Number-Only Point Tiles
+            POINT_TIERS.forEach((points, tIdx) => {
+                state.categories.forEach((cat, cIdx) => {
+                    const key = `${cIdx}-${tIdx}`;
+                    const isCleared = !!state.playedTiles[key];
+                    const tileBtn = document.createElement('button');
+                    tileBtn.type = 'button';
+                    tileBtn.className = `quiz-tile tier-${points} h-16 sm:h-[74px] flex items-center justify-center text-2xl sm:text-3xl ${isCleared ? 'tile-cleared' : ''}`;
+                    tileBtn.onclick = () => openQuestionModal(cIdx, tIdx);
+                    tileBtn.textContent = points;
+                    boardGrid.appendChild(tileBtn);
+                });
+            });
+
+            updateSongCounter();
+        }
+
+        function updateSongCounter() {
+            const playedCount = Object.keys(state.playedTiles).filter(k => state.playedTiles[k]).length;
+            const total = state.categories.length * POINT_TIERS.length;
+            document.getElementById('songCounterText').textContent = `Daftar Lagu: ${playedCount} / ${total}`;
+        }
+
+        function renderTeams() {
+            const container = document.getElementById('teamScoreboardContainer');
+            container.innerHTML = '';
+
+            state.teams.forEach((team, idx) => {
+                const card = document.createElement('div');
+                card.className = 'vn-panel rounded-2xl px-4 py-2.5 flex items-center justify-between gap-6 min-w-[180px] sm:min-w-[200px] group';
+                card.innerHTML = `
+                    <button onclick="cycleTeamName(${idx})" class="flex items-center gap-2.5 text-left" title="Klik untuk ganti nama tim">
+                        <span class="w-3.5 h-3.5 rounded-sm shrink-0" style="background:${team.color}"></span>
+                        <span class="font-display font-bold text-base text-[#3D312A]">${team.name}</span>
+                    </button>
+
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="adjustTeamScore(${idx}, -100)" class="w-6 h-6 rounded-lg bg-[#F5EFE6] hover:bg-[#E6DEC3] text-[#3D312A] font-bold text-xs flex items-center justify-center" title="-100">−</button>
+                            <button onclick="adjustTeamScore(${idx}, 100)" class="w-6 h-6 rounded-lg bg-[#F5EFE6] hover:bg-[#E6DEC3] text-[#3D312A] font-bold text-xs flex items-center justify-center" title="+100">+</button>
+                        </div>
+                        <span class="font-display font-bold text-2xl text-[#3D312A] min-w-[2rem] text-right">
+                            ${team.score}
+                        </span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function adjustTeamScore(teamIdx, delta) {
+            state.teams[teamIdx].score += delta;
+            playSfx(delta >= 0 ? 'scoreUp' : 'scoreDown');
+            renderTeams();
+        }
+
+        function addNewTeam() {
+            if (state.teams.length >= 5) return;
+            const palette = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6'];
+            const nextLetter = String.fromCharCode(65 + state.teams.length);
+            state.teams.push({
+                id: nextLetter,
+                name: nextLetter,
+                color: palette[state.teams.length % palette.length],
+                score: 0
+            });
+            playSfx('click');
+            renderTeams();
+            renderLeaderboardList();
+        }
+
+        function cycleTeamName(teamIdx) {
+            const presets = ['A', 'B', 'C', 'D', 'AKATSUKI', 'NERV', 'STARLIGHT'];
+            const current = state.teams[teamIdx].name;
+            const nextIdx = (presets.indexOf(current) + 1) % presets.length;
+            state.teams[teamIdx].name = presets[nextIdx];
+            playSfx('click');
+            renderTeams();
+        }
+
+        function openQuestionModal(catIdx, tierIdx) {
+            playSfx('tile');
+            state.activeTile = { catIdx, tierIdx };
+            const cat = state.categories[catIdx];
+            const points = POINT_TIERS[tierIdx];
+            const item = cat.questions[tierIdx];
+
+            document.getElementById('modalCategoryBadge').textContent = cat.name;
+            document.getElementById('modalPointsBadge').textContent = `${points} PTS`;
+
+            document.getElementById('modalAnswerBox').classList.add('hidden');
+            document.getElementById('modalAnswerText').textContent = item.a;
+
+            updateModalPlayedButtonState();
+
+            // Smooth VN Typewriter
+            const qEl = document.getElementById('modalQuestionText');
+            if (typewriterTimer) clearInterval(typewriterTimer);
+            qEl.textContent = '';
+            let charIdx = 0;
+            typewriterTimer = setInterval(() => {
+                qEl.textContent += item.q.charAt(charIdx);
+                charIdx++;
+                if (charIdx >= item.q.length) clearInterval(typewriterTimer);
+            }, 14);
+
+            // Team Award Buttons
+            const awardContainer = document.getElementById('modalTeamAwardButtons');
+            awardContainer.innerHTML = '';
+            state.teams.forEach((team, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'vn-panel vn-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-[#3D312A] hover:bg-[#FAF6F0] flex items-center gap-2';
+                btn.onclick = () => awardActiveTilePoints(idx, points);
+                btn.innerHTML = `
+                    <span class="w-2.5 h-2.5 rounded-sm" style="background:${team.color}"></span>
+                    <span>+${points} ${team.name}</span>
+                `;
+                awardContainer.appendChild(btn);
+            });
+
+            resetStageTimer();
+            stopMysterySynthTrack();
+
+            const modal = document.getElementById('questionModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function revealModalAnswer() {
+            const box = document.getElementById('modalAnswerBox');
+            if (box.classList.contains('hidden')) {
+                box.classList.remove('hidden');
+                playSfx('reveal');
+                if (state.activeTile) {
+                    const key = `${state.activeTile.catIdx}-${state.activeTile.tierIdx}`;
+                    state.playedTiles[key] = true;
+                    updateModalPlayedButtonState();
+                    renderBoard();
+                }
+            }
+        }
+
+        function awardActiveTilePoints(teamIdx, points) {
+            state.teams[teamIdx].score += points;
+            if (state.activeTile) {
+                const key = `${state.activeTile.catIdx}-${state.activeTile.tierIdx}`;
+                state.playedTiles[key] = true;
+            }
+            playSfx('scoreUp');
+            renderTeams();
+            renderBoard();
+            closeQuestionModal();
+        }
+
+        function toggleCurrentTileStatus() {
+            if (!state.activeTile) return;
+            const key = `${state.activeTile.catIdx}-${state.activeTile.tierIdx}`;
+            state.playedTiles[key] = !state.playedTiles[key];
+            playSfx('click');
+            updateModalPlayedButtonState();
+            renderBoard();
+        }
+
+        function updateModalPlayedButtonState() {
+            if (!state.activeTile) return;
+            const key = `${state.activeTile.catIdx}-${state.activeTile.tierIdx}`;
+            const isPlayed = !!state.playedTiles[key];
+            const btn = document.getElementById('btnTogglePlayedState');
+            btn.style.backgroundColor = isPlayed ? '#EEF7F2' : '#FFFFFF';
+            btn.style.color = isPlayed ? '#23533A' : '#3D312A';
+        }
+
+        function closeQuestionModal() {
+            stopMysterySynthTrack();
+            if (state.timerInterval) {
+                clearInterval(state.timerInterval);
+                state.timerInterval = null;
+            }
+            const modal = document.getElementById('questionModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            state.activeTile = null;
+        }
+
+        function toggleMysterySynthTrack() {
+            if (state.synthPlaying) {
+                stopMysterySynthTrack();
+                return;
+            }
+            if (!ensureAudioReady()) return;
+
+            state.synthPlaying = true;
+            document.getElementById('iconPlayClue').classList.add('hidden');
+            document.getElementById('iconStopClue').classList.remove('hidden');
+
+            const melodies = [
+                ['F5', 'G5', 'A5', 'C6', 'A5', 'G5', 'F5', 'D5'],
+                ['E5', 'G5', 'B5', 'E6', 'D6', 'B5', 'G5', 'F#5'],
+                ['C5', 'D5', 'E5', 'G5', 'A5', 'G5', 'E5', 'D5'],
+                ['D5', 'F5', 'A5', 'D6', 'C6', 'A5', 'G5', 'F5'],
+                ['G5', 'A5', 'B5', 'D6', 'C6', 'B5', 'A5', 'G5']
+            ];
+            const catIdx = state.activeTile ? state.activeTile.catIdx : 0;
+            const notes = melodies[catIdx % melodies.length];
+            let step = 0;
+
+            melodyLoop = setInterval(() => {
+                if (!state.synthPlaying || state.audioMuted) {
+                    stopMysterySynthTrack();
+                    return;
+                }
+                try {
+                    sfxSynth.triggerAttackRelease(notes[step % notes.length], '8n');
+                } catch (e) {}
+                step++;
+            }, 230);
+        }
+
+        function stopMysterySynthTrack() {
+            state.synthPlaying = false;
+            if (melodyLoop) {
+                clearInterval(melodyLoop);
+                melodyLoop = null;
+            }
+            const playIcon = document.getElementById('iconPlayClue');
+            const stopIcon = document.getElementById('iconStopClue');
+            if (playIcon) playIcon.classList.remove('hidden');
+            if (stopIcon) stopIcon.classList.add('hidden');
+        }
+
+        function resetStageTimer() {
+            if (state.timerInterval) {
+                clearInterval(state.timerInterval);
+                state.timerInterval = null;
+            }
+            state.timerSeconds = 20;
+            document.getElementById('stageTimerDisplay').textContent = '20s';
+        }
+
+        function toggleStageTimer() {
+            playSfx('click');
+            if (state.timerInterval) {
+                clearInterval(state.timerInterval);
+                state.timerInterval = null;
+                return;
+            }
+            state.timerInterval = setInterval(() => {
+                state.timerSeconds--;
+                document.getElementById('stageTimerDisplay').textContent = `${state.timerSeconds}s`;
+                if (state.timerSeconds <= 0) {
+                    clearInterval(state.timerInterval);
+                    state.timerInterval = null;
+                    playSfx('scoreDown');
+                }
+            }, 1000);
+        }
+
+        function closeModalById(id) {
+            playSfx('click');
+            const el = document.getElementById(id);
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+        }
+
+        let audienceIdx = 0;
+        function openAudienceQuizModal() {
+            playSfx('tile');
+            spinAudienceQuiz();
+            const modal = document.getElementById('audienceModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function spinAudienceQuiz() {
+            playSfx('click');
+            audienceIdx = (audienceIdx + 1) % AUDIENCE_QUIZ_POOL.length;
+            const item = AUDIENCE_QUIZ_POOL[audienceIdx];
+            document.getElementById('audienceQuestionText').textContent = item.q;
+            const ans = document.getElementById('audienceAnswerText');
+            ans.textContent = item.a;
+            ans.classList.add('hidden');
+        }
+
+        function revealAudienceAnswer() {
+            playSfx('reveal');
+            document.getElementById('audienceAnswerText').classList.remove('hidden');
+        }
+
+        function openResetConfirmModal() {
+            playSfx('click');
+            const modal = document.getElementById('resetModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function executeBoardReset(resetScoresToo) {
+            state.playedTiles = {};
+            if (resetScoresToo) {
+                state.teams.forEach(t => t.score = 0);
+                renderTeams();
+            }
+            playSfx('reveal');
+            renderBoard();
+            closeModalById('resetModal');
+        }
+
+        function openLeaderboardModal() {
+            playSfx('tile');
+            renderLeaderboardList();
+            const modal = document.getElementById('leaderboardModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function renderLeaderboardList() {
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = '';
+            const sorted = [...state.teams].sort((a, b) => b.score - a.score);
+
+            sorted.forEach((team, rank) => {
+                const row = document.createElement('div');
+                row.className = 'bg-[#FAF6F0] border border-[#E6DEC3] rounded-xl px-4 py-2.5 flex items-center justify-between';
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-bold text-[#8C7D72] w-4">#${rank + 1}</span>
+                        <span class="w-3 h-3 rounded-sm" style="background:${team.color}"></span>
+                        <span class="font-display font-bold text-base text-[#3D312A]">Tim ${team.name}</span>
+                    </div>
+                    <span class="font-display font-bold text-lg text-[#3D312A]">${team.score}</span>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        function openAdminModal() {
+            playSfx('click');
+            const catInputs = document.getElementById('adminCategoryInputs');
+            const selectCat = document.getElementById('adminSelectCat');
+            catInputs.innerHTML = '';
+            selectCat.innerHTML = '';
+
+            state.categories.forEach((cat, idx) => {
+                catInputs.innerHTML += `
+                    <input id="adminCatName-${idx}" type="text" value="${cat.name}" class="vn-panel rounded-xl px-2.5 py-1.5 text-xs font-bold text-[#3D312A] w-full">
+                `;
+                selectCat.innerHTML += `<option value="${idx}">${cat.name}</option>`;
+            });
+
+            loadAdminTileEditor();
+            const modal = document.getElementById('adminModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function loadAdminTileEditor() {
+            const cIdx = parseInt(document.getElementById('adminSelectCat').value || '0', 10);
+            const tIdx = parseInt(document.getElementById('adminSelectTier').value || '0', 10);
+            const item = state.categories[cIdx].questions[tIdx];
+            document.getElementById('adminInputQuestion').value = item.q;
+            document.getElementById('adminInputAnswer').value = item.a;
+        }
+
+        function saveAdminChanges() {
+            state.categories.forEach((cat, idx) => {
+                const input = document.getElementById(`adminCatName-${idx}`);
+                if (input && input.value.trim()) {
+                    cat.name = input.value.trim().toUpperCase();
+                }
+            });
+
+            const cIdx = parseInt(document.getElementById('adminSelectCat').value || '0', 10);
+            const tIdx = parseInt(document.getElementById('adminSelectTier').value || '0', 10);
+            const qVal = document.getElementById('adminInputQuestion').value.trim();
+            const aVal = document.getElementById('adminInputAnswer').value.trim();
+            if (qVal) state.categories[cIdx].questions[tIdx].q = qVal;
+            if (aVal) state.categories[cIdx].questions[tIdx].a = aVal;
+
+            playSfx('scoreUp');
+            renderBoard();
+            closeModalById('adminModal');
+        }
+
+        window.addEventListener('keydown', (e) => {
+            const qModal = document.getElementById('questionModal');
+            const isQOpen = !qModal.classList.contains('hidden');
+            if (e.key === 'Escape' && isQOpen) {
+                closeQuestionModal();
+            } else if (e.code === 'Space' && isQOpen && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                revealModalAnswer();
+            }
+        });
+
+        window.onload = function () {
+            renderBoard();
+            renderTeams();
+        };
+    </script>
+</body>
+</html>
